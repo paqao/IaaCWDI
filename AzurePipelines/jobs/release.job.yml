@@ -1,0 +1,76 @@
+parameters:
+- name: environment
+  type: string
+  default: DEV
+  values:
+  - DEV
+  - DEMO
+
+- name: azureSubscription
+  type: string
+  default: ''
+
+- name: location
+  type: string
+  default: NorthEurope
+
+- name: locationShort
+  type: string
+  default: WE
+
+- name: UseBicep
+  type: boolean
+  default: true
+
+jobs:
+- deployment: IaaCSample
+  pool:
+    vmImage: windows-latest
+  environment: ${{parameters.environment}}
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: replacetokens@3
+          displayName: 'Replacing tokens in azuredeploy.parameters.json file'
+          inputs:
+            rootDirectory: '$(Pipeline.Workspace)\azure\'
+            targetFiles: 'azuredeploy.parameters.json'
+            encoding: 'auto'
+            writeBOM: true
+            actionOnMissing: 'warn'
+            keepToken: false
+            tokenPrefix: '#{'
+            tokenSuffix: '}#'
+            useLegacyPattern: false
+            enableTransforms: false
+            enableTelemetry: false
+
+        - task: AzureCLI@2
+          condition: ${{parameters.useBicep}}
+          inputs:
+            azureSubscription: "${{ parameters.azureSubscription }}"
+            scriptType: pscore
+            scriptLocation: inlineScript
+            inlineScript: |
+              az  group create --resource-group 'pl-rg-neu-$(SomeName)' --location ${{parameters.location}}
+
+        - task: AzureCLI@2
+          condition: ${{parameters.useBicep}}
+          inputs:
+            azureSubscription: "${{ parameters.azureSubscription }}"
+            scriptType: pscore
+            scriptLocation: inlineScript
+            location: ${{parameters.location}}
+            inlineScript: |
+              az deployment group create --resource-group 'pl-rg-neu-$(SomeName)' --template-file '$(Pipeline.Workspace)\azure\azuredeploy.bicep' --parameters $(Pipeline.Workspace)\azure\azuredeploy.parameters.json --mode Complete --name Deployment-$(Get-Date -f 'yyyyMMdd-HHmmss')-$(SomeName)
+
+        - task: AzureResourceGroupDeployment@2
+          displayName: 'Create or update resource group'
+          condition: not(${{parameters.UseBicep}})
+          inputs:
+            azureSubscription: ${{parameters.azureSubscription}}
+            resourceGroupName: pl-rg-neu-$(SomeName)
+            location: ${{parameters.location}}
+            csmFile: '$(Pipeline.Workspace)/azure/azuredeploy.json'
+            csmParametersFile: '$(Pipeline.Workspace)/azure/azuredeploy.parameters.json'

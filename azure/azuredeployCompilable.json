@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.15.31.15270",
+      "templateHash": "16469202949407242488"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "environmentCode": {
+      "type": "string"
+    },
+    "storageKind": {
+      "type": "string",
+      "allowedValues": [
+        "StorageV2",
+        "BlobStorage"
+      ]
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-09-01",
+      "name": "[format('pl{0}saneu', toLower(parameters('environmentCode')))]",
+      "kind": "[parameters('storageKind')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2021-09-01",
+      "name": "[format('{0}/{1}', format('pl{0}saneu', toLower(parameters('environmentCode'))), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('pl{0}saneu', toLower(parameters('environmentCode'))))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2021-09-01",
+      "name": "[format('{0}/{1}/{2}', format('pl{0}saneu', toLower(parameters('environmentCode'))), 'default', 'othername')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('pl{0}saneu', toLower(parameters('environmentCode'))), 'default')]"
+      ]
+    }
+  ]
+}

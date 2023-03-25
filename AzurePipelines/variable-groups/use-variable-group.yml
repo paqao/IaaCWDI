@@ -1,0 +1,9 @@
+parameters:
+  - name: environment
+    type: string
+
+variables:
+  - name: sampleVariable
+    value: 123
+  - template: ./${{parameters.environment}}.yml
+  - group: ${{parameters.environment}}

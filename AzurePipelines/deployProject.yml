@@ -1,0 +1,28 @@
+name: $(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+parameters:
+- name: DeployEnv
+  displayName: Variable for demo purpose
+  type: boolean 
+  default: false
+- name: UseBicep
+  displayName: Use Bicep for deployment
+  type: boolean
+  default: true 
+
+trigger: 
+  - develop
+  - main
+
+stages:
+- template: 'stages/build.stage.yml' 
+- template: 'stages/release.stage.yml'
+  parameters:
+   UseBicep: ${{ parameters.UseBicep }}
+   environment: 'DEV'
+   DependsOn: build
+- template: 'stages/release.stage.yml'  
+  parameters:
+    UseBicep: ${{ parameters.UseBicep }}
+    environment: 'DEMO'
+    DependsOn: release_DEV

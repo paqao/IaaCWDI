@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageKind": {
+      "type": "string",
+      "allowedValues": [
+       "StorageV2",
+       "BlobStorage"
+      ]
+    },
+    "environmentCode":{
+      "type": "string"
+    }
+  },
+  "variables": {
+    "storageAccountName": "[concat('parasomeothernmamepl', toLower(parameters('environmentCode')))]"
+  },
+  "resources": [
+     {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-09-01",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('storageAccountName')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "[parameters('storageKind')]",
+      "properties": {
+        "supportsHttpsTrafficOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2021-09-01",
+      "name": "[concat(variables('storageAccountName'), '/default/', 'containername')]",
+      "dependsOn": ["[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"]
+    }
+  ]
+}

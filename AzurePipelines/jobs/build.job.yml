@@ -1,0 +1,27 @@
+parameters:
+- name: serviceConnection
+  type: string
+
+jobs:
+- job: buildJob
+  displayName: Build
+  pool:
+    vmImage: windows-latest
+    workspace:
+      clean: all
+  
+  variables:    
+    - name: ASPNETCORE_ENVIRONMENT
+      value: 'CI'
+    - name: NUGET_PACKAGES
+      value: $(Pipeline.Workspace)/.nuget/packages    
+
+  steps:
+  - powershell: |
+      Write-Host "Current branch: $env:BUILD_SOURCEBRANCH"
+    displayName: 'Update Build Version'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: azure'
+    inputs:
+      PathtoPublish: 'azure'
+      ArtifactName: azure

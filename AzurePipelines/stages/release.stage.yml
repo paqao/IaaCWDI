@@ -1,0 +1,26 @@
+parameters:
+- name: UseBicep
+  displayName: Use bicep for deployment
+  type: boolean
+  default: true
+- name: environment
+  displayName: Environment
+  type: string
+- name: dependsOn
+  type: string
+
+stages:
+- stage: release_${{parameters.Environment}}
+  variables:
+    - template: ../variable-groups/use-variable-group.yml
+      parameters:
+        environment: ${{parameters.environment}}
+  displayName: ${{parameters.Environment}}
+  dependsOn: ${{parameters.dependsOn}}
+  condition: succeeded()
+  jobs:
+  - template: '../jobs/release.job.yml'
+    parameters:
+      environment: ${{ parameters.environment }}
+      azureSubscription: 'AzureDemo2'
+      UseBicep: ${{parameters.UseBicep}}

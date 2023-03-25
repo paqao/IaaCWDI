@@ -1,0 +1,11 @@
+stages:
+- stage: Build
+  displayName: 'Build'
+  variables:
+    - template: ../variable-groups/use-variable-group.yml
+      parameters:
+        environment: DEV
+  jobs:
+    - template: '../jobs/build.job.yml'
+      parameters:
+        serviceConnection: 'AzureDemo2'
